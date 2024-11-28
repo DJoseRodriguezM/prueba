@@ -21,6 +21,11 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleImageCapture}>
+          <Text style={styles.buttonText}>Capturar imagen</Text>
+        </TouchableOpacity>
+      </View>
       <CameraView ref={cameraRef} style={styles.camera} facing={'back'} />
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handleImageCapture}>
@@ -50,7 +55,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: 20,
+    top: 40,
     width: '100%',
     alignItems: 'center',
   },
