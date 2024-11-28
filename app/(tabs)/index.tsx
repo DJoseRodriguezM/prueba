@@ -1,12 +1,21 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as tf from '@tensorflow/tfjs';
+import * as mobilenet from '@tensorflow-models/mobilenet';
 
 export default function App() {
   const cameraRef = useRef<CameraView>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [presentedShape, setPresentedShape] = useState('');
+  const [predictions, setPredictions] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      await tf.ready();
+    })();
+  }, []);
 
   const handleImageCapture = async () => {
     setIsProcessing(true);
@@ -15,8 +24,22 @@ export default function App() {
     });
     if (imageData!.base64) {
       setCapturedImage(imageData!.base64);
+      classifyImage(imageData!.base64);
+      // console.log("Imagen capturada: ",imageData!.base64); // Imprimir imagen capturada en la consola
     }
     setIsProcessing(false);
+  };
+
+  const classifyImage = async (base64: string) => {
+
+    const img = document.createElement('img');
+    console.log("Prediciones: "); // Imprimir predicciones en la consola
+
+    img.src = `data:image/jpeg;base64,${base64}`;
+    const model = await mobilenet.load();
+    const predictions = await model.classify(img);
+
+    setPredictions(predictions);
   };
 
   return (
@@ -35,10 +58,19 @@ export default function App() {
       {isProcessing && <Text>Procesando imagen...</Text>}
       {capturedImage && (
         <View style={styles.imageContainer}>
+          <View><Text>predicciones: {predictions}</Text></View>
+          {predictions.length > 0 && (
+            <View>
+              {predictions.map((prediction, index) => (
+                <Text key={index}>{`${prediction.className}: ${prediction.probability.toFixed(2)}`}</Text>
+              ))}
+            </View>
+          )}
           <Image
             source={{ uri: `data:image/jpeg;base64,${capturedImage}` }}
             style={styles.image}
           />
+          
         </View>
       )}
     </View>
